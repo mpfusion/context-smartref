@@ -1,0 +1,189 @@
+%D \module
+%D   [     file=t-smartref,
+%D      version=2013.09.27,
+%D        title=\CONTEXT\ User Module,
+%D     subtitle=Smart References,
+%D       author=Marco Patzer,
+%D         date=\currentdate,
+%D    copyright=Marco Patzer,
+%D      license=GNU General Public License]
+
+%C Copyright (C) 2013  Marco Patzer
+%C
+%C This program is free software: you can redistribute it and/or modify
+%C it under the terms of the GNU General Public License as published by
+%C the Free Software Foundation, either version 3 of the License, or
+%C any later version.
+
+%D This module simplifies and automates references to floats or sections. It
+%D has the same semantics as \tex{in} and takes the same arguments. At the
+%D moment it provides the single command \tex{smartref}, which is basically
+%D \tex{in}, \tex{at} and \tex{atpage} merged together into one single
+%D command. Here is an example:
+%D
+%D \starttyping
+%D   \smartref{figure}[fig:somefigure]
+%D \stoptyping
+%D
+%D The existing commands are not flexible enough. \tex{atpage} does not have
+%D the concept of double pages. This means it might, for instance, print
+%D \quotation{as we show above} even if the float is visible. \tex{somewhere}
+%D doesn't suppress the reference text if the reference happens to end up on
+%D the same page, which is not desired.
+%D
+%D Depending on where the float or section is located, it prints a different
+%D string. It behaves differently if a single||sided layout or a double||sided
+%D layout is being used. In a single-sided layout it takes the location on the
+%D {\em page} into account. In a double||sided layout, however, it operates on
+%D the {\em double page}. Single pages in a double||sided layout are rather
+%D insignificant in traditional typesetting. The reader is always faced with
+%D double pages, never with single pages.
+%D
+%D \tex{smartref} behaves as follows:
+%D
+%D \startitemize
+%D   \startitem
+%D     it prints the reference if it is on the same page (e.g. Figure 1.2)
+%D   \stopitem
+%D   \startitem
+%D     it prints the reference and a customizable text if the reference is on
+%D     the next/previous page (e.g. Figure 1.2 on the previous page)
+%D   \stopitem
+%D   \startitem
+%D     it prints the reference and the page if the reference is further away
+%D     than one page (e.g. Figure 1.2 on page 42)
+%D   \stopitem
+%D \stopitemize
+
+%M \page
+
+\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.09.27)}
+
+\startmodule [smartref]
+
+\unprotect
+
+\startinterface all
+	\setinterfacevariable {previouspage} {previouspage}
+	\setinterfacevariable {nextpage}     {nextpage}
+\stopinterface
+
+\unexpanded\def\smartref_smart
+	{\strc_references_start_goto
+	 \let\currentreferencecontent\currentreferencedefault
+	 \smartref_pickup_smart_goto}
+
+\def\smartref_pickup_smart_goto
+	{\dodoublegroupempty\smartref_pickup_goto_smart_indeed}
+
+\starttexdefinition smartref_pickup_goto_smart_indeed #left#right#dummy[#label]
+	\leftreferencetoks
+	\iffirstargument
+		{#left}
+	\else
+		\defaultleftreferencetoks
+		\let\leftofreferencecontent\empty
+	\fi
+	\rightreferencetoks
+	\ifsecondargument
+		{#right}
+	\else
+		\defaultrightreferencetoks
+		\let\rightofreferencecontent\empty
+	\fi
+	\doifreferencefoundelse{#label}
+		{\goto{\referencesequence}[#label]
+		 \smartref_check_visibility
+		 \ifreferenceisvisible\else
+			 \space\smartref_smart_string
+		 \fi}
+		 {\let\currentreferencecontent\dummyreference
+			\goto{\referencesequence}[#label]}
+  \strc_references_stop_goto
+\stoptexdefinition
+
+\newif\ifreferenceisvisible \referenceisvisiblefalse
+
+\starttexdefinition smartref_check_visibility
+	\def\smartref_smart_string{\labeltext\v!atpage\currentreferencepage}
+	\referenceisvisiblefalse
+
+	\ifnum\referencepagestate=\plusone %% 1 = reference on current page
+		\referenceisvisibletrue
+	\else
+		\ifsinglesided
+			\smartref_do_relative_else\plusone
+				{\def\smartref_smart_string{\labeltext\v!nextpage}}
+				{\smartref_do_relative_else\minusone
+				 {\def\smartref_smart_string{\labeltext\v!previouspage}}{}}
+		\else
+			\ifodd\realpageno
+				\smartref_do_relative_else\minusone
+					{\def\smartref_smart_string{\labeltext\v!previouspage}
+					 \referenceisvisibletrue}
+					{\smartref_do_relative_else\plusone
+					 {\def\smartref_smart_string{\labeltext\v!nextpage}}{}}
+			\else
+				\smartref_do_relative_else\minusone
+					{\def\smartref_smart_string{\labeltext\v!previouspage}}
+					{\smartref_do_relative_else\plusone
+					 \referenceisvisibletrue{}}
+			\fi
+		\fi
+	\fi
+\stoptexdefinition
+
+%D Checks if the current reference is \type{#1} pages away. The argument can
+%D be negative. There need to be a current reference, otherwise
+%D \tex{currentreferencerealpage} is not defined. This is assured when
+%D \tex{doifreferencefoundelse} is called before.
+
+\starttexdefinition smartref_do_relative_else #relativepagenumber
+	\ifnum\currentreferencerealpage=\numexpr\realpageno+#relativepagenumber\relax
+		\expandafter\firstoftwoarguments
+	\else
+		\expandafter\secondoftwoarguments
+	\fi
+\stoptexdefinition
+
+\let\smartref\smartref_smart
+
+\startinterface all
+	\setinterfacevariable {previouspage} {previouspage}
+	\setinterfacevariable {nextpage}     {nextpage}
+\stopinterface
+
+\setuplabeltext
+	[\s!en]
+	[\v!previouspage=on the previous page,
+	 \v!nextpage=on the next page]
+
+\protect
+
+\stopmodule
+
+\continueifinputfile{t-smartref.mkvi}
+
+\useMPlibrary
+	[dum]
+
+\setuppagenumbering
+	[alternative=doublesided]
+
+\starttext
+
+      See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+\page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+
+\startplacefigure [reference=fig:alpha] \externalfigure \stopplacefigure
+\startplacefigure [reference=fig:beta]  \externalfigure \stopplacefigure
+
+\page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+
+\startplacefigure [reference=fig:gamma] \externalfigure \stopplacefigure
+\startplacefigure [reference=fig:delta] \externalfigure \stopplacefigure
+
+\page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+\page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+
+\stoptext

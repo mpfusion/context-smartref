@@ -8,18 +8,22 @@ and `\atpage` merged together into one single command. Here is an example:
     \smartref{figure}[fig:somefigure]
 
 The existing commands are not flexible enough. `\atpage` does not have the
-concept of double pages. This means it might, for instance, print
-\quotation{as we show above} even if the float is visible. `\somewhere`
-doesn't suppress the reference text if the reference happens to end up on the
-same page, which is not desired.
+concept of double pages. This means it might, for instance, print ”as we show
+above” even if the float is visible. `\somewhere` doesn't suppress the
+reference text if the reference happens to end up on the same page, which is
+not desired. Furthermore, the user needs to remember to use `\in` if the
+sections should be referred to by number. If on the other hand, a reference
+should be referred to by title the command `\about` is used. The `\smartref`
+command automatically refers to the section by number if it is available. If
+the user turns off numbering, the sections are referred to by title.
 
-Depending on where the float or section is located, it prints a different
-string. It behaves differently if a single-sided layout or a double-sided
-layout is being used. In a single-sided layout it takes the location on the
-*page* into account. In a double-sided layout, however, it operates on the
-*double page*. Single pages in a double-sided layout are rather insignificant
-in traditional typesetting. The reader is always faced with double pages,
-never with single pages.
+Depending on where the floats or sections are located, `\smartref` prints
+a different string. It behaves differently if a single-sided layout or
+a double-sided layout is being used. In a single-sided layout it takes the
+location on the *page* into account. In a double-sided layout, however, it
+operates on the *double page*. Single pages in a double-sided layout are
+rather insignificant in traditional typesetting. The reader is always faced
+with double pages, never with single pages.
 
 `\smartref` behaves as follows:
 

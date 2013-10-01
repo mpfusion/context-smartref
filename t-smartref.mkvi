@@ -1,6 +1,6 @@
 %D \module
 %D   [     file=t-smartref,
-%D      version=2013.09.27,
+%D      version=2013.10.02,
 %D        title=\CONTEXT\ User Module,
 %D     subtitle=Smart References,
 %D       author=Marco Patzer,
@@ -18,8 +18,8 @@
 %D This module simplifies and automates references to floats or sections. It
 %D has the same semantics as \tex{in} and takes the same arguments. At the
 %D moment it provides the single command \tex{smartref}, which is basically
-%D \tex{in}, \tex{at} and \tex{atpage} merged together into one single
-%D command. Here is an example:
+%D \tex{in}, \tex{at}, \tex{about} and \tex{atpage} merged together into one
+%D single command. Here is an example:
 %D
 %D \starttyping
 %D   \smartref{figure}[fig:somefigure]
@@ -29,15 +29,20 @@
 %D the concept of double pages. This means it might, for instance, print
 %D \quotation{as we show above} even if the float is visible. \tex{somewhere}
 %D doesn't suppress the reference text if the reference happens to end up on
-%D the same page, which is not desired.
+%D the same page, which is not desired. Furthermore, the user needs to
+%D remember to use \tex{in} if the sections should be referred to by number.
+%D If on the other hand, a reference should be referred to by title the
+%D command \tex{about} is used. The \tex{smartref} command automatically
+%D refers to the section by number if it is available. If the user turns off
+%D numbering, the sections are referred to by title.
 %D
-%D Depending on where the float or section is located, it prints a different
-%D string. It behaves differently if a single||sided layout or a double||sided
-%D layout is being used. In a single-sided layout it takes the location on the
-%D {\em page} into account. In a double||sided layout, however, it operates on
-%D the {\em double page}. Single pages in a double||sided layout are rather
-%D insignificant in traditional typesetting. The reader is always faced with
-%D double pages, never with single pages.
+%D Depending on where the floats or sections are located, \tex{smartref}
+%D prints a different string. It behaves differently if a single||sided layout
+%D or a double||sided layout is being used. In a single-sided layout it takes
+%D the location on the {\em page} into account. In a double||sided layout,
+%D however, it operates on the {\em double page}. Single pages in a
+%D double||sided layout are rather insignificant in traditional typesetting.
+%D The reader is always faced with double pages, never with single pages.
 %D
 %D \tex{smartref} behaves as follows:
 %D
@@ -57,7 +62,7 @@
 
 %M \page
 
-\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.09.27)}
+\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.10.02)}
 
 \startmodule [smartref]
 
@@ -78,28 +83,56 @@
 
 \starttexdefinition smartref_pickup_goto_smart_indeed #left#right#dummy[#label]
 	\leftreferencetoks
+
 	\iffirstargument
 		{#left}
 	\else
 		\defaultleftreferencetoks
 		\let\leftofreferencecontent\empty
 	\fi
+
 	\rightreferencetoks
+
 	\ifsecondargument
 		{#right}
 	\else
 		\defaultrightreferencetoks
 		\let\rightofreferencecontent\empty
 	\fi
-	\doifreferencefoundelse{#label}
-		{\goto{\referencesequence}[#label]
-		 \smartref_check_visibility
-		 \ifreferenceisvisible\else
-			 \space\smartref_smart_string
-		 \fi}
-		 {\let\currentreferencecontent\dummyreference
-			\goto{\referencesequence}[#label]}
-  \strc_references_stop_goto
+
+	\doifreferencefoundelse{#label}{%%
+		\edef\currentreferencenumber{\currentreferencenumber}%% needs to be expanded
+
+		\ifx\currentreferencenumber\empty
+			\dontleavehmode
+			\begingroup
+			\let\crlf\space
+			\let\\\space
+			\postponenotes
+			\iffirstargument
+				{#left}\space
+			\fi
+			\referencingparameter\c!left
+			\goto{\limitatetext\currentreferencetitle{\referencingparameter\c!width}\unknown}[#label]
+			\referencingparameter\c!right
+			\iffirstargument
+				{#right}
+			\fi
+			\endgroup
+
+		\else %% section has number
+			\goto{\referencesequence}[#label]
+		\fi
+
+		\smartref_check_visibility
+		\ifreferenceisvisible\else
+			\space\smartref_smart_string
+		\fi
+	}%% reference not found
+	{\let\currentreferencecontent\dummyreference
+		\goto{\referencesequence}[#label]}
+
+	\strc_references_stop_goto
 \stoptexdefinition
 
 \newif\ifreferenceisvisible \referenceisvisiblefalse
@@ -185,5 +218,17 @@
 
 \page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
 \page See \smartref{figure}[fig:alpha] and \smartref{figure}[fig:gamma].
+
+      See \smartref{section}[sec:section] and \smartref{section}[sec:subject].
+\page See \smartref{section}[sec:section] and \smartref{section}[sec:subject].
+
+\startsection [title=Some section, reference=sec:section]
+\stopsection
+
+\startsubject [title=Some subject, reference=sec:subject]
+\stopsubject
+
+\page See \smartref{section}[sec:section] and \smartref{section}[sec:subject].
+\page See \smartref{section}[sec:section] and \smartref{section}[sec:subject].
 
 \stoptext

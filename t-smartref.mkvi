@@ -1,6 +1,6 @@
 %D \module
 %D   [     file=t-smartref,
-%D      version=2013.10.02,
+%D      version=2013.10.07,
 %D        title=\CONTEXT\ User Module,
 %D     subtitle=Smart References,
 %D       author=Marco Patzer,
@@ -62,7 +62,7 @@
 
 %M \page
 
-\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.10.02)}
+\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.10.07)}
 
 \startmodule [smartref]
 
@@ -100,34 +100,36 @@
 		\let\rightofreferencecontent\empty
 	\fi
 
-	\doifreferencefoundelse{#label}{%%
-		\edef\currentreferencenumber{\currentreferencenumber}%% needs to be expanded
+	\doifreferencefoundelse{#label}
+		{\edef\currentreferencenumber{\currentreferencenumber}%% needs to be expanded
 
-		\ifx\currentreferencenumber\empty
-			\dontleavehmode
-			\begingroup
-			\let\crlf\space
-			\let\\\space
-			\postponenotes
-			\iffirstargument
-				{#left}\space
-			\fi
-			\referencingparameter\c!left
-			\goto{\limitatetext\currentreferencetitle{\referencingparameter\c!width}\unknown}[#label]
-			\referencingparameter\c!right
-			\iffirstargument
-				{#right}
-			\fi
-			\endgroup
+	\def\smartref_reference_no_number{
+		\dontleavehmode
+		\begingroup
+		\let\crlf\space
+		\let\\\space
+		\postponenotes
+		\doifsomething{#left}{#left\space}
+		\referencingparameter\c!left
+		\goto{\limitatetext\currentreferencetitle{\referencingparameter\c!width}\unknown}[#label]
+		\referencingparameter\c!right
+		\doifsomething{#right}{#right\space}
+		\endgroup}
 
-		\else %% section has number
+	\ifx\currentreferencenumber\empty
+		\smartref_reference_no_number
+	\else
+		\ifx\currentreferencenumber\emptyreference
+			\smartref_reference_no_number
+		\else
 			\goto{\referencesequence}[#label]
 		\fi
+	\fi
 
-		\smartref_check_visibility
-		\ifreferenceisvisible\else
-			\space\smartref_smart_string
-		\fi
+	\smartref_check_visibility
+	\ifreferenceisvisible\else
+		\space\smartref_smart_string
+	\fi
 	}%% reference not found
 	{\let\currentreferencecontent\dummyreference
 		\goto{\referencesequence}[#label]}

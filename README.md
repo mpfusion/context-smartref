@@ -2,8 +2,9 @@
 
 This ConTeXt module simplifies and automates references to floats or sections.
 It has the same semantics as `\in` and takes the same arguments. At the moment
-it provides the single command `\smartref`, which is basically `\in`, `\at`
-and `\atpage` merged together into one single command. Here is an example:
+it provides the single command `\smartref`, which is basically `\in`, `\at`,
+`\about` and `\atpage` merged together into one single command. Here is an
+example:
 
     \smartref{figure}[fig:somefigure]
 
@@ -32,3 +33,5 @@ with double pages, never with single pages.
   next/previous page (e.g. Figure 1.2 on the previous page)
 - it prints the reference and the page if the reference is further away than
   one page (e.g. Figure 1.2 on page 42)
+- it refers to the float/section/equation/… number if available, if section
+  numbers are turned off, it refers to the title instead

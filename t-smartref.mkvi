@@ -1,6 +1,6 @@
 %D \module
 %D   [     file=t-smartref,
-%D      version=2013.10.07,
+%D      version=2013.10.08,
 %D        title=\CONTEXT\ User Module,
 %D     subtitle=Smart References,
 %D       author=Marco Patzer,
@@ -58,11 +58,15 @@
 %D     it prints the reference and the page if the reference is further away
 %D     than one page (e.g. Figure 1.2 on page 42)
 %D   \stopitem
+%D   \startitem
+%D     it refers to the float/section/equation/\unknown\ number if available,
+%D     if section numbers are turned off, it refers to the title instead
+%D   \stopitem
 %D \stopitemize
 
 %M \page
 
-\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.10.07)}
+\writestatus{loading}{ConTeXt User Module / smartref (ver: 2013.10.08)}
 
 \startmodule [smartref]
 
